@@ -35,6 +35,13 @@
       </div>
     -->
       <br/>
+      <div class="loader">
+        <div class="row">
+          <div class="col-md-12 loader_img">
+            <img src="/assets/img/loader.gif" class="loader_img" />
+          </div>
+        </div>
+      </div>
       <div class="row data">
         <div class="col-md-3">
           <div><h1 id="max-price"></h1></div>
@@ -54,18 +61,66 @@
         </div>
       </div>
       <div class="row data">
-        <div id="data-chart"></div>
+        <div class="col-md-2"></div>
+        <div class="col-md-7" id="data-chart-container">
+          <canvas id="data-chart" width="300" height="150"></canvas>
+        </div>
       </div>
     <script>
-      function processData() {
-        var data={"stats":{"max":6500000,"min":3600,"avg":262077.3424234,"total_items":154,"max_item":{"id":"MCO426127734","permalink":"http:\/\/articulo.mercadolibre.com.co\/MCO-426127734-maquina-colombiana-para-exprimir-naranjas-mandarina-y-limon-_JM","thumbnail":"http:\/\/mco-s1-p.mlstatic.com\/237911-MCO20675170411_042016-I.jpg","price":6500000},"min_item":{"id":"MCO424996738","permalink":"http:\/\/articulo.mercadolibre.com.co\/MCO-424996738-velas-frutales-en-forma-y-olor-de-mandarina-fresa-manzana-_JM","thumbnail":"http:\/\/mco-s2-p.mlstatic.com\/134521-MCO20794356012_062016-I.jpg","price":3600},"buckets":[{"text":"3600-653240","max":653240,"min":3600,"count":137,"is_top":false},{"text":"653240-1302880","max":1302880,"min":653240,"count":12,"is_top":false},{"text":"1302880-1952520","max":1952520,"min":1302880,"count":2,"is_top":false},{"text":"1952520-2602160","max":2602160,"min":1952520,"count":0,"is_top":false},{"text":"2602160-3251800","max":3251800,"min":2602160,"count":0,"is_top":false},{"text":"3251800-3901440","max":3901440,"min":3251800,"count":0,"is_top":false},{"text":"3901440-4551080","max":4551080,"min":3901440,"count":0,"is_top":false},{"text":"4551080-5200720","max":5200720,"min":4551080,"count":0,"is_top":false},{"text":"5200720-5850360","max":5850360,"min":5200720,"count":0,"is_top":false},{"text":"5850360 o mayor","max":6500000,"min":5850360,"count":1,"is_top":true}]}};
-
+      var chart;
+      function draw(data) {
+        if(chart) {
+          chart.destroy();
+        }
         $("#search-text").html($("#search-box").val());
         $("#max-price").html(data.stats.max);
         $("#min-price").html(data.stats.min);
         $("#avg-price").html(data.stats.avg.toFixed(2));
         $("#total-items").html(data.stats.total_items);
         $(".data").fadeIn();
+        //Chart
+        var mainDataset = {
+          label:'Price Distribution',
+          data:[],
+          backgroundColor: []
+        };
+        var chartData = {
+          type:'bar',
+          data:{
+            labels:[],
+            datasets:[mainDataset],
+            options: {
+              scales: {
+                yAxes: [{
+                  ticks: {
+                      beginAtZero:true
+                  }
+                }]
+              }
+            }
+          }
+        };
+        data.stats.buckets.forEach(function(e) {
+          chartData.data.labels.push(e.text);
+          mainDataset.data.push(e.count);
+          mainDataset.backgroundColor.push("rgba(255,248,26,1)");
+        })
+        var ctx = $("#data-chart");
+        console.log(chartData)
+        chart = new Chart(ctx, chartData);
+
+      }
+      function processData() {
+        $(".data").fadeOut();
+        $(".loader").show();
+        $.get("/search_stats.php?q="+encodeURI($("#search-box").val()),function(data) {
+          $(".loader").hide();
+          draw(data);
+        }).fail(function(err) {
+          $(".loader").hide();
+          console.log("Error")
+          console.log(err)
+        })
       }
     </script>
   </body>

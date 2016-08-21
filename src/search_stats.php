@@ -1,25 +1,29 @@
 <?php
 require './Meli/meli.php';
-$buckets_count = 10;
+$buckets_count = 8;
 function getItems($q) {
   $meli = new Meli('','');
   $items = array();
   $offset = 0;
   $restItems = 1;
-  $result = $meli->get('/sites/MCO/search',array('q' => $q,'$offset' => $offset));
+  $limit = 200;
+  $result = $meli->get('/sites/MCO/search',array('q' => rawurlencode($q),'$offset' => $offset,'limit' => $limit));
   if($result['httpCode'] != 200) {
     print_r(json_encode($result));
   }
   while($result['httpCode'] == 200 && $restItems > 0 ) {
     $body = $result['body'];
     $paging = $body->paging;
+
     foreach ($body->results as $item) {
       $items[] = $item;
     }
     $limit = $body->paging->limit;
     $offset = $offset + $limit;
     $restItems = $paging->total - $offset;
-    $result = $meli->get('/sites/MCO/search',array('q' => $q,'limit' => $limit,'offset' => $offset));
+    if($restItems > 0) {
+      $result = $meli->get('/sites/MCO/search',array('q' => rawurlencode($q),'limit' => $limit,'offset' => $offset));
+    }
 
   }
   return $items;

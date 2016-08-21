@@ -7,3 +7,13 @@
   margin: 20px;
   display: none;
 }
+
+.loader {
+  margin: 20px;
+  display: none;
+}
+
+.loader_img {
+  text-align: center;
+  align-content: center;
+}
