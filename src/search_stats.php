@@ -4,19 +4,22 @@ $buckets_count = 10;
 function getItems($q) {
   $meli = new Meli('','');
   $items = array();
-  $limit = 100;
   $offset = 0;
   $restItems = 1;
-  $result = $meli->get('/sites/MCO/search',array('q' => $q,'limit' => $limit,'$offset' => $offset));
-  while($result['httpCode'] == 200 && $restItems >= 0 ) {
+  $result = $meli->get('/sites/MCO/search',array('q' => $q,'$offset' => $offset));
+  if($result['httpCode'] != 200) {
+    print_r(json_encode($result));
+  }
+  while($result['httpCode'] == 200 && $restItems > 0 ) {
     $body = $result['body'];
     $paging = $body->paging;
-    $restItems = $paging->total - $offset*$limit;
     foreach ($body->results as $item) {
       $items[] = $item;
     }
-    $offset = $offset + 1;
-    $result = $meli->get('/sites/MCO/search',array('q' => $q,'limit' => $limit,'$offset' => $offset));
+    $limit = $body->paging->limit;
+    $offset = $offset + $limit;
+    $restItems = $paging->total - $offset;
+    $result = $meli->get('/sites/MCO/search',array('q' => $q,'limit' => $limit,'offset' => $offset));
 
   }
   return $items;
@@ -29,18 +32,22 @@ function basicItemData($item) {
                'price' => $item->price);
 }
 function getBuckets($max, $min, $buckets_count) {
-  $buckets = array(
+  $buckets = array();
   $actual = $min;
   $step = ($max - $min) / $buckets_count;
+
   while($actual < $max) {
     $next = $actual + $step;
     $text = $actual."-".$next;
+    $top = false;
     if($next >= $max) {
       $text = $actual." o mayor";
+      $top = true;
     }
-    $buckets[] = array("max" => $next, "min" => $actual, "count" => 0);
+    $buckets[] = array("text"=>$text, "max" => $next, "min" => $actual, "count" => 0, "is_top" => $top);
     $actual = $next;
   }
+
   return $buckets;
 }
 function calculateStats($items) {
@@ -58,14 +65,14 @@ function calculateStats($items) {
       $first = 0;
       $max = $item->price;
       $max_item = basicItemData($item);
-      $min = $item->price;
+      $min = max($item->price,0);
       $min_item = basicItemData($item);
     }else {
-      if($max < $item->price) {
+      if($item->price != null && $max < $item->price) {
         $max = $item->price;
         $max_item = basicItemData($item);
       }
-      if($min > $item->price) {
+      if($item->price != null && $min > $item->price) {
         $min = $item->price;
         $min_item = basicItemData($item);
       }
@@ -75,10 +82,18 @@ function calculateStats($items) {
   }
   $avg = $sum / $count;
 
-  $buckets = getBuckets($max,$min,$buckets_count);
-  foreach ($items as $item) {
-    foreach ($buckets as $key => $value) {
-      # code...
+  $buckets = getBuckets($max,$min,$GLOBALS['buckets_count']);
+  if(sizeof($buckets) == 0) {
+    $buckets[] = array("max" => $max, "min" => $min, "count" => $count);
+  } else {
+    foreach ($items as $item) {
+      for ($i = 0; $i < sizeof($buckets); $i++) {
+        if(($item->price >= $buckets[$i]["min"] && $item->price < $buckets[$i]["max"]) ||
+            ($item->price >= $buckets[$i]["max"] && $buckets[$i]["is_top"] == 1)) {
+          $buckets[$i]["count"] = $buckets[$i]["count"] +1;
+          break;
+        }
+      }
     }
   }
 
@@ -87,13 +102,20 @@ function calculateStats($items) {
                 array("max" => $max,
                       "min" => $min,
                       "avg" => $avg,
+                      "total_items" => $count,
                       "max_item" => $max_item,
-                      "min_item" => $min_item
+                      "min_item" => $min_item,
+                      "buckets" => $buckets
                     )
                );
 }
 
 $items = getItems($_GET['q']);
 header('Content-Type: application/json');
-echo json_encode(calculateStats($items));
+if(sizeof($items) == 0) {
+  header('HTTP/1.0 404 Not Found');
+  echo json_encode(array("error" => "No items found"));
+} else {
+  echo json_encode(calculateStats($items));
+}
 ?>
