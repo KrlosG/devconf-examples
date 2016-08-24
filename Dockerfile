@@ -20,7 +20,7 @@ ADD ./configs/ports.conf /etc/apache2/ports.conf
 ADD ./bin/main.sh /bin/main.sh
 
 ##Configure APP
-#ADD ./app /app
-#RUN chmod 777 -R /app
+ADD ./ /app
+RUN chmod 777 -R /app
 CMD /bin/main.sh
 WORKDIR /app
