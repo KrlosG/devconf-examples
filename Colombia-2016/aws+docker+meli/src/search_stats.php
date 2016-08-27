@@ -1,6 +1,6 @@
 <?php
 require './Meli/meli.php';
-$buckets_count = 8;
+$buckets_count = 45;
 function getItems($q) {
   $meli = new Meli('','');
   $items = array();
@@ -35,21 +35,22 @@ function basicItemData($item) {
                'thumbnail' => $item->thumbnail,
                'price' => $item->price);
 }
-function getBuckets($max, $min, $buckets_count) {
+function getBuckets($max, $min, $avg,$buckets_count) {
   $buckets = array();
   $actual = $min;
-  $step = ($max - $min) / $buckets_count;
-
-  while($actual < $max) {
-    $next = $actual + $step;
-    $text = $actual."-".$next;
+  $step = round(($max - $min) / $buckets_count);
+  $i = 0;
+  while($i < $buckets_count) {
+    $next = round($actual + $step);
+    $text = "[".$actual."-".$next.")";
     $top = false;
-    if($next >= $max) {
+    if($i+1 >= $buckets_count) {
       $text = $actual." o mayor";
       $top = true;
     }
     $buckets[] = array("text"=>$text, "max" => $next, "min" => $actual, "count" => 0, "is_top" => $top);
     $actual = $next;
+    $i = $i+1;
   }
 
   return $buckets;
@@ -84,9 +85,9 @@ function calculateStats($items) {
     $count = $count+1;
     $sum = $sum + $item->price;
   }
-  $avg = $sum / $count;
+  $avg = round($sum / $count,2);
 
-  $buckets = getBuckets($max,$min,$GLOBALS['buckets_count']);
+  $buckets = getBuckets($max, $min, $avg, $GLOBALS['buckets_count']);
   if(sizeof($buckets) == 0) {
     $buckets[] = array("max" => $max, "min" => $min, "count" => $count);
   } else {
