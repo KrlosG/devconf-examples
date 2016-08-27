@@ -38,7 +38,12 @@ function basicItemData($item) {
 function getBuckets($max, $min, $avg,$buckets_count) {
   $buckets = array();
   $actual = $min;
-  $step = round(($max - $min) / $buckets_count);
+  //busca si la relacion promedio maximo es menor al 20%
+  if(($avg/$max) < 0.20) {
+    $step = round(($avg - $min) / $buckets_count);
+  } else {
+    $step = round(($max - $min) / $buckets_count);
+  }
   $i = 0;
   while($i < $buckets_count) {
     $next = round($actual + $step);

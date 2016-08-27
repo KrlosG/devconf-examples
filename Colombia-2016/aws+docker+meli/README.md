@@ -17,7 +17,9 @@ Si se quiere buldear la imagen y correrla refrescando cambios locales
 
 ```
 	docker build -t mercadolibre/php-search-stats-demo .
-	docker run -t -i -p 8080:8080 -v $(PWD):/app mercadolibre/php-search-stats-demo 
+	docker run -t -i -p 8080:8080 -v $(PWD):/app mercadolibre/php-search-stats-demo
 ```
 
+## Para usar la app (solo durante la devconf)
 
+[http://devconf-colombia-2016-892931073.us-east-1.elb.amazonaws.com/](http://devconf-colombia-2016-892931073.us-east-1.elb.amazonaws.com)
