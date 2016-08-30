@@ -19,6 +19,3 @@ Si se quiere buildear la imagen y correrla refrescando cambios locales
 	./run_development.sh
 ```
 
-## Para usar la app (solo durante la devconf)
-
-[http://devconf-colombia-2016-892931073.us-east-1.elb.amazonaws.com/](http://devconf-colombia-2016-892931073.us-east-1.elb.amazonaws.com)
