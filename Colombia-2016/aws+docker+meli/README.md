@@ -13,7 +13,7 @@ Para correr el ejemplo
 ```
 
 
-Si se quiere buldear la imagen y correrla refrescando cambios locales
+Si se quiere buildear la imagen y correrla refrescando cambios locales
 
 ```
 	./run_development.sh
